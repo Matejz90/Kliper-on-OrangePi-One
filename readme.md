@@ -112,7 +112,7 @@ python setup.py bdist_wheel
 The generic setup instructions boil down to  
   
 Installing Python including pip and virtualenv. Please note: While OctoPrint itself supports running under Python 3.7+ starting with version 1.4.0, many of the available plugins still are Python 2 only. If you want to make use of plugins from the plugin repository, you should for now still install OctoPrint under Python 2.7. Note that migrating to Python 3 at a later date is easily done.  
-Creating a virtual environment somewhere: sudo virtualenv OctoPrint  
+Creating a virtual environment somewhere: ```sudo virtualenv OctoPrint```  
 Installing OctoPrint into that virtual environment: ```sudo OctoPrint/bin/pip install OctoPrint```  
 OctoPrint may then be started through ```./OctoPrint/bin/octoprint serve``` or with an absolute path ```/path/to/OctoPrint/bin/octoprint serve```  
 
