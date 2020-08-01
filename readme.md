@@ -107,7 +107,6 @@ cd pyserial-2.7
 sudo python setup.py install  
 cd ~  
 pip install wheel  
-python setup.py bdist_wheel  
 ```
 The generic setup instructions boil down to  
   
@@ -125,19 +124,22 @@ Adjust the paths to your octoprint binary in /etc/systemd/system/octoprint.servi
 GNU nano 2.9.3                      /etc/systemd/system/octoprint.service
 
 [Unit]
-Description=OctoPrint
-After=network.target
+Description=The snappy web interface for your 3D printer
+After=network-online.target
+Wants=network-online.target
 
 [Service]
+Type=simple
 User=pi
-ExecStart=/OctoPrint/bin/octoprint serve
+ExecStart=/home/pi/OctoPrint/bin/octoprint serve
 Restart=always
+RestartSec=5
 Nice=-2
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 ```  
-Then add the script to autostart using sudo systemctl enable octoprint.service.  
+Then add the script to autostart using ```sudo systemctl enable octoprint.service```  
   
 This will also allow you to start/stop/restart the OctoPrint daemon via  
   
@@ -148,7 +150,7 @@ This will also allow you to start/stop/restart the OctoPrint daemon via
 Setup on Raspbian is as follows:  
 
 ```sudo apt install haproxy```  
-I'm using the following configuration in /etc/haproxy/haproxy.cfg  
+I'm using the following configuration in ```/etc/haproxy/haproxy.cfg```  
 ```
 global
         log /dev/log    local0
