@@ -12,7 +12,7 @@ Octoprint install
 ```
 cd ~
 sudo apt update
-sudo apt install python-pip python-dev python-setuptools python-virtualenv git libyaml-dev build-essential
+sudo apt install python-pip python-dev python-setuptools python-virtualenv git libyaml-dev build-essential libavcodec-dev
 mkdir OctoPrint && cd OctoPrint
 virtualenv venv
 source venv/bin/activate
