@@ -123,3 +123,186 @@ In Settings > Commands, configure the following commands:
 Restart OctoPrint: sudo service octoprint restart  
 Restart system: sudo shutdown -r now  
 Shutdown system: sudo shutdown -h now  
+
+Optional: Webcam
+If you also want webcam and timelapse support, you'll need to download and compile MJPG-Streamer:
+
+cd ~
+sudo apt install subversion libjpeg62-turbo-dev imagemagick ffmpeg libv4l-dev cmake
+git clone https://github.com/jacksonliam/mjpg-streamer.git
+cd mjpg-streamer/mjpg-streamer-experimental
+export LD_LIBRARY_PATH=.
+make
+:point_up: Heads-up
+
+The required packages depend on the underlying version of Debian! The above is what should work on the current Debian Stretch based images of Raspbian.
+
+For Jessie use:
+
+sudo apt install subversion libjpeg62-turbo-dev imagemagick libav-tools libv4l-dev cmake
+For Wheezy or older (you should update...) use:
+
+sudo apt install subversion libjpeg8-dev imagemagick libav-tools libv4l-dev cmake
+This should hopefully run through without any compilation errors. You should then be able to start the webcam server using:
+
+./mjpg_streamer -i "./input_uvc.so" -o "./output_http.so"
+This should give the following output:
+
+MJPG Streamer Version: svn rev:
+ i: Using V4L2 device.: /dev/video0
+ i: Desired Resolution: 640 x 480
+ i: Frames Per Second.: 5
+ i: Format............: MJPEG
+[...]
+ o: www-folder-path...: disabled
+ o: HTTP TCP port.....: 8080
+ o: username:password.: disabled
+ o: commands..........: enabled
+For some webcams (including the PS3 Eye) you'll need to force the YUV mode by using the following start command:
+
+./mjpg_streamer -i "./input_uvc.so -y" -o "./output_http.so" 
+Please be aware that YUV mode will put additional strain on your Raspi's CPU which will then lower its performance, possibly up to the point of causing printing issues. If your camera requires the -y parameter to function, consider replacing it with one that doesn't.
+
+:spiral_notepad: Note
+
+If your webcam requires switching to YUV mode in order to work at all, it is strongly recommended to instead use a webcam that natively supports MJPG. For YUV cameras mjpg_streamer will need to transcode all data from the camera to MJPG on your Raspberry Pi, which will put a lot of strain on its CPU (YUV mode at around 30-40% vs MJPG mode at around 1-2%). This MIGHT negatively influence print quality, so better get yourself a cheap MJPG compatible webcam. See this wiki page 556 for a compatibility list and steer clear of cams that require -y to work.
+
+:spiral_notepad: Note
+
+If you want to use the official RaspberryPi Camera Module you need to run
+
+./mjpg_streamer -i "./input_raspicam.so -fps 5" -o "./output_http.so" 
+If you now point your browser to http://<your Raspi's IP>:8080/?action=stream, you should see a moving picture at 5fps. (If you get an error message about missing files or directories calling the output plugin with -o "./output_http.so -w ./www" should help.)
+
+Open OctoPrint's settings dialog and under Webcam & Timelapse configured the following:
+
+Stream URL: /webcam/?action=stream
+Snapshot URL: http://127.0.0.1:8080/?action=snapshot
+Path to FFMPEG: /usr/bin/ffmpeg
+:point_up: Heads-up
+
+If for whatever reason you are still using a Raspbian image based on Debian Jessie or older, "Path to FFMPEG" should instead be /usr/bin/avconv.
+
+Restart the OctoPrint server, clear the cache on your browser and reload the OctoPrint page. You should now see the stream from the webcam in the "Control" tab, and a "Timelapse" tab with options.
+
+If you want to be able to start and stop mjpeg-streamer from within OctoPrint, put the following in /home/pi/scripts/webcam:
+
+#!/bin/bash
+# Start / stop streamer daemon
+
+case "$1" in
+    start)
+        /home/pi/scripts/webcamDaemon >/dev/null 2>&1 &
+        echo "$0: started"
+        ;;
+    stop)
+        pkill -x webcamDaemon
+        pkill -x mjpg_streamer
+        echo "$0: stopped"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}" >&2
+        ;;
+esac
+Put this in /home/pi/scripts/webcamDaemon:
+
+#!/bin/bash
+
+MJPGSTREAMER_HOME=/home/pi/mjpg-streamer/mjpg-streamer-experimental
+MJPGSTREAMER_INPUT_USB="input_uvc.so"
+MJPGSTREAMER_INPUT_RASPICAM="input_raspicam.so"
+
+# init configuration
+camera="auto"
+camera_usb_options="-r 640x480 -f 10"
+camera_raspi_options="-fps 10"
+
+if [ -e "/boot/octopi.txt" ]; then
+    source "/boot/octopi.txt"
+fi
+
+# runs MJPG Streamer, using the provided input plugin + configuration
+function runMjpgStreamer {
+    input=$1
+    pushd $MJPGSTREAMER_HOME
+    echo Running ./mjpg_streamer -o "output_http.so -w ./www" -i "$input"
+    LD_LIBRARY_PATH=. ./mjpg_streamer -o "output_http.so -w ./www" -i "$input"
+    popd
+}
+
+# starts up the RasPiCam
+function startRaspi {
+    logger "Starting Raspberry Pi camera"
+    runMjpgStreamer "$MJPGSTREAMER_INPUT_RASPICAM $camera_raspi_options"
+}
+
+# starts up the USB webcam
+function startUsb {
+    logger "Starting USB webcam"
+    runMjpgStreamer "$MJPGSTREAMER_INPUT_USB $camera_usb_options"
+}
+
+# we need this to prevent the later calls to vcgencmd from blocking
+# I have no idea why, but that's how it is...
+vcgencmd version
+
+# echo configuration
+echo camera: $camera
+echo usb options: $camera_usb_options
+echo raspi options: $camera_raspi_options
+
+# keep mjpg streamer running if some camera is attached
+while true; do
+    if [ -e "/dev/video0" ] && { [ "$camera" = "auto" ] || [ "$camera" = "usb" ] ; }; then
+        startUsb
+    elif [ "`vcgencmd get_camera`" = "supported=1 detected=1" ] && { [ "$camera" = "auto" ] || [ "$camera" = "raspi" ] ; }; then
+        startRaspi
+    fi
+
+    sleep 120
+done
+Make sure both files are executable:
+
+chmod +x /home/pi/scripts/webcam
+chmod +x /home/pi/scripts/webcamDaemon
+If you want different camera options put them in /boot/octopi.txt or modify the script accordingly.
+
+If you want autostart of the webcam you need to add the following line to /etc/rc.local (Just make sure to put it above the line that reads exit 0).
+
+/home/pi/scripts/webcam start
+If you want to be able to start and stop the webcam server through OctoPrint's system menu, add the following to config.yaml:
+
+system:
+  actions:
+   - action: streamon
+     command: /home/pi/scripts/webcam start
+     confirm: false
+     name: Start video stream
+   - action: streamoff
+     command: sudo /home/pi/scripts/webcam stop
+     confirm: false
+     name: Stop video stream
+:spiral_notepad: Note
+
+If you want to view the stream directly on your Pi, please be aware that Midori will not allow you to see the webcam picture. Chromium works although it is a bit slow, but it still might be useful for testing or aiming the camera:
+
+sudo apt install chromium-browser
+In any case this is only recommended for debugging purposes during setup, running a graphical user interface on the Pi will put a lot of unnecessary load on the CPU which might negatively influence print results.
+
+:spiral_notepad: Note
+
+mjpegstreamer does not allow to bind to a specific interface to limit the accessibility to localhost only. If you want your octoprint instance to be reachable from the internet you need to block access to port 8080 from all sources except localhost if you don't want the whole world to see your webcam image.
+
+To do this simply add iptables rules like this:
+
+sudo /sbin/iptables -A INPUT -p tcp -i wlan0 ! -s 127.0.0.1 --dport 8080 -j DROP    # for ipv4
+sudo /sbin/ip6tables -A INPUT -p tcp -i wlan0 ! -s ::1 --dport 8080 -j DROP         # for ipv6
+Replace the interface with eth0, if you happen to use ethernet.
+
+To make them persistent, they need to be saved. In order to be restored at boot time, the easiest way is to install iptables-persist:
+
+sudo apt install iptables-persistent
+The only thing left to do now, is save the rules you have added:
+
+sudo /sbin/ip6tables-save > /etc/iptables/rules.v6
+sudo /sbin/iptables-save > /etc/iptables/rules.v4
