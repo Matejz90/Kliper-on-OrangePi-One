@@ -294,3 +294,45 @@ The only thing left to do now, is save the rules you have added:
 
 sudo /sbin/ip6tables-save > /etc/iptables/rules.v6
 sudo /sbin/iptables-save > /etc/iptables/rules.v4
+
+Klipper install
+git clone https://github.com/KevinOConnor/klipper
+./klipper/scripts/install-octopi.sh
+
+Building and flashing the micro-controller
+To compile the micro-controller code, start by running these commands on the Raspberry Pi:
+
+cd ~/klipper/
+make menuconfig
+Select the appropriate micro-controller and review any other options provided. Once configured, run:
+
+make
+It is necessary to determine the serial port connected to the micro-controller. For micro-controllers that connect via USB, run the following:
+
+ls /dev/serial/by-id/*
+It should report something similar to the following:
+
+/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0
+It’s common for each printer to have its own unique serial port name. This unique name will be used when flashing the micro-controller. It’s possible there may be multiple lines in the above output - if so, choose the line corresponding to the micro-controller (see the FAQ for more information).
+
+For common micro-controllers, the code can be flashed with something similar to:
+
+sudo service klipper stop
+make flash FLASH_DEVICE=/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0
+sudo service klipper start
+Be sure to update the FLASH_DEVICE with the printer’s unique serial port name.
+
+When flashing for the first time, make sure that OctoPrint is not connected directly to the printer (from the OctoPrint web page, under the “Connection” section, click “Disconnect”).
+
+Configuring OctoPrint to use Klipper
+The OctoPrint web server needs to be configured to communicate with the Klipper host software. Using a web browser, login to the OctoPrint web page and then configure the following items:
+
+Navigate to the Settings tab (the wrench icon at the top of the page). Under “Serial Connection” in “Additional serial ports” add “/tmp/printer”. Then click “Save”.
+
+Enter the Settings tab again and under “Serial Connection” change the “Serial Port” setting to “/tmp/printer”.
+
+In the Settings tab, navigate to the “Behavior” sub-tab and select the “Cancel any ongoing prints but stay connected to the printer” option. Click “Save”.
+
+From the main page, under the “Connection” section (at the top left of the page) make sure the “Serial Port” is set to “/tmp/printer” and click “Connect”. (If “/tmp/printer” is not an available selection then try reloading the page.)
+
+Once connected, navigate to the “Terminal” tab and type “status” (without the quotes) into the command entry box and click “Send”. The terminal window will likely report there is an error opening the config file - that means OctoPrint is successfully communicating with Klipper. Proceed to the next section.
