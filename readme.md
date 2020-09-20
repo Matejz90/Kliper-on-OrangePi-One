@@ -40,7 +40,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=pi
-ExecStart=/home/pi/OctoPrint/bin/octoprint serve
+ExecStart=/home/pi/OctoPrint/venv/bin/octoprint serve
 Restart=always
 RestartSec=5
 Nice=-2
