@@ -152,8 +152,10 @@ If you want to use the official RaspberryPi Camera Module you need to run
 Stream URL: ```/webcam/?action=stream```  
 Snapshot URL: ```http://127.0.0.1:8080/?action=snapshot```  
 Path to FFMPEG: ```/usr/bin/ffmpeg```  
-
-If you want to be able to start and stop mjpeg-streamer from within OctoPrint, put the following in /home/pi/scripts/webcam:  
+  
+Execute ```sudo mkdir /home/pi/scripts```  
+  
+If you want to be able to start and stop mjpeg-streamer from within OctoPrint, put the following in ```sudo nano /home/pi/scripts/webcam```  
   
 ```
 #!/bin/bash
@@ -175,7 +177,7 @@ case "$1" in
 esac
 ```
   
-Put this in /home/pi/scripts/webcamDaemon:  
+Put this in ```sudo nano /home/pi/scripts/webcamDaemon```  
   
 ```
 #!/bin/bash
