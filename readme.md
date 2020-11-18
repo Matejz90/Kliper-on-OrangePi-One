@@ -53,9 +53,9 @@ Then add the script to autostart using ```sudo systemctl enable octoprint.servic
   
 This will also allow you to start/stop/restart the OctoPrint daemon via  
   
-```sudo service octoprint start```
-```sudo service octoprint stop```
-```sudo service octoprint restart```
+```sudo service octoprint start```  
+```sudo service octoprint stop```  
+```sudo service octoprint restart```  
 ```systemctl status octoprint.service```  
 
 ## Make everything accessible on port 80  
