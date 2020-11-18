@@ -1,6 +1,22 @@
 First go ```sudo raspi-config``` and connect to WIFI and resize filesystem then go to:  
 ```sudo apt-get update -y && sudo apt-get upgrade -y```
-
+## LCD 5 inch Configuration  
+Edit boot.txt with ```sudo nano /boot/config.txt```  
+```
+max_usb_current=1
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt 800 480 60 6 0 0 0
+hdmi_drive=1
+```
+Then on raspby execute:  
+```
+git clone https://github.com/waveshare/LCD-show.git
+cd LCD-show/
+chmod +x LCD5-show
+./LCD5-show
+```
+  
 ## LCD 4 inch Configuration  
 ```sudo rm -rf LCD-show
 git clone https://github.com/goodtft/LCD-show.git
