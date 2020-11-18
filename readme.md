@@ -30,7 +30,8 @@ If you disabled Raspbian's default behaviour of allowing the pi user passwordles
 Download the init script files from OctoPrint's repository, move them to their respective folders and make the init script executable:  
   
 ```wget https://github.com/foosel/OctoPrint/raw/master/scripts/octoprint.service && sudo mv octoprint.service /etc/systemd/system/octoprint.service```  
-Adjust the paths to your octoprint binary in /etc/systemd/system/octoprint.service. If you set it up in a virtualenv as described above make sure your /etc/systemd/system/octoprint.service looks like this:  
+Adjust the paths to your octoprint binary in ```sudo nano /etc/systemd/system/octoprint.service```.
+  
 ```
 [Unit]
 Description=The snappy web interface for your 3D printer
@@ -52,7 +53,9 @@ Then add the script to autostart using ```sudo systemctl enable octoprint.servic
   
 This will also allow you to start/stop/restart the OctoPrint daemon via  
   
-```sudo service octoprint {start|stop|restart}```  
+```sudo service octoprint start```
+```sudo service octoprint stop```
+```sudo service octoprint restart```
 ```systemctl status octoprint.service```  
 
 ## Make everything accessible on port 80  
