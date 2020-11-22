@@ -24,6 +24,9 @@ chmod -R 755 LCD-show
 cd LCD-show/
 sudo ./MPI4008-show
 ```
+For touchscreen calibration use:  
+```DISPLAY=0:0 xinput_calibrator```  
+  
 ## Octoprint install  
 ```
 cd ~
