@@ -14,7 +14,7 @@ Then on raspbi execute:
 git clone https://github.com/waveshare/LCD-show.git
 cd LCD-show/
 chmod +x LCD5-show
-./LCD5-show
+sudo ./LCD5-show
 ```
   
 ## LCD 4 inch Configuration  
