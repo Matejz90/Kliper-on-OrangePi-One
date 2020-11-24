@@ -1,4 +1,4 @@
-First go ```sudo raspi-config``` and connect to WIFI and resize filesystem then go to:  
+First go ```sudo raspi-config```, connect to WIFI and resize filesystem then:  
 ```sudo apt-get update -y && sudo apt-get upgrade -y```
 ## LCD 5 inch Configuration  
 Edit boot.txt with ```sudo nano /boot/config.txt```  
